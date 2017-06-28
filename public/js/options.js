@@ -8,48 +8,60 @@
  * that attraction's id. Selecting an option looks up the attraction by id,
  * then tells the trip module to add the attraction.
  */
+var enhanced = {};
+var hotels= 'hi';
+var restaurants;
+var activities;
+  var $optionsPanel = $('#options-panel');
+  var $hotelSelect = $optionsPanel.find('#hotel-choices');
+  var $restaurantSelect = $optionsPanel.find('#restaurant-choices');
+  var $activitySelect = $optionsPanel.find('#activity-choices');
 
 $(function loadPage() {
-    $.ajax({
+    var hotelsAjax = $.ajax({
         method: 'GET',
         url: '/api/hotels',
         // dataType: 'json'
     })
     .then(function(allHotels) {
-        let hotelsHTML = allHotels.map(hotel => {
-            return`<option>${hotel.name}</option>`
-        })
-        $('#hotel-choices').append(hotelsHTML);
+        hotels = allHotels;
+        allHotels.forEach(makeOption, $hotelSelect);
     })
     .catch(console.error)
 
-    $.ajax({
+    var restaurantsAjax = $.ajax({
         method: 'GET',
         url: '/api/restaurants',
         // dataType: 'json'
     })
     .then(function(allRestaurants) {
-        let restaurantHTML = allRestaurants.map(restaurant => {
-            return`<option>${restaurant.name}</option>`
-        })
-        $('#restaurant-choices').append(restaurantHTML);
+        restaurants = allRestaurants;
+        allRestaurants.forEach(makeOption, $restaurantSelect)
     })
     .catch(console.error)
 
-    $.ajax({
+    var activitiesAjax = $.ajax({
         method: 'GET',
         url: '/api/activities',
         // dataType: 'json'
     })
     .then(function(allActivities) {
-        let activitiesHTML = allActivities.map(activity => {
-            return`<option>${activity.name}</option>`
-        })
-        $('#activity-choices').append(activitiesHTML);
+        activities = allActivities;
+        allActivities.forEach(makeOption, $activitySelect);
     })
     .catch(console.error)
-    
 
+    Promise.all([hotelsAjax, restaurantsAjax, activitiesAjax])
+    .then(() => {
+        attractionsModule.setEnhanced(hotels, restaurants, activities)
+    })
+    
+  function makeOption (databaseAttraction) {
+    var $option = $('<option></option>') // makes a new option tag
+      .text(databaseAttraction.name)
+      .val(databaseAttraction.id);
+    this.append($option); // add the option to the specific select
+  }
     $('#options-panel').on('click', 'button[data-action="add"]', function () {
     var $select = $(this).siblings('select');
     var type = $select.data('type'); // from HTML data-type attribute
@@ -57,41 +69,7 @@ $(function loadPage() {
     // get associated attraction and add it to the current day in the trip
     var attraction = attractionsModule.getByTypeAndId(type, id);
     console.log(attraction)
-    tripModule.addToCurrent(attraction);
+    tripModule.addToCurrent(attraction);``
   });
 
 })()
-
-
-// $(function(){
-
-//   // jQuery selects
-//   var $optionsPanel = $('#options-panel');
-//   var $hotelSelect = $optionsPanel.find('#hotel-choices');
-//   var $restaurantSelect = $optionsPanel.find('#restaurant-choices');
-//   var $activitySelect = $optionsPanel.find('#activity-choices');
-
-//   // // make all the option tags (second arg of `forEach` is a `this` binding)
-//   // hotels.forEach(makeOption, $hotelSelect);
-//   // restaurants.forEach(makeOption, $restaurantSelect);
-//   // activities.forEach(makeOption, $activitySelect);
-
-//   // function makeOption (databaseAttraction) {
-//   //   var $option = $('<option></option>') // makes a new option tag
-//   //     .text(databaseAttraction.name)
-//   //     .val(databaseAttraction.id);
-//   //   this.append($option); // add the option to the specific select
-//   // }
-
-//   // what to do when the `+` button next to a `select` is clicked
-//   $optionsPanel.on('click', 'button[data-action="add"]', function () {
-//     var $select = $(this).siblings('select');
-//     console.log('Reached')
-//     var type = $select.data('type'); // from HTML data-type attribute
-//     var id = $select.find(':selected').val();
-//     // get associated attraction and add it to the current day in the trip
-//     var attraction = attractionsModule.getByTypeAndId(type, id);
-//     tripModule.addToCurrent(attraction);
-//   });
-
-// });

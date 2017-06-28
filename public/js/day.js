@@ -94,6 +94,7 @@ var dayModule = (function () {
 
   Day.prototype.addAttraction = function (attraction) {
     // adding to the day object
+    console.log("this is atrractions", attraction)
     switch (attraction.type) {
       case 'hotel':
         if (this.hotel) this.hotel.hide();
